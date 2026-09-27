@@ -5,7 +5,7 @@ require_relative "lib/urlpipe/version"
 Gem::Specification.new do |spec|
   spec.name = "urlpipe"
   spec.version = Urlpipe::VERSION
-  spec.authors = ["Aliat Partner S.L."]
+  spec.authors = ["URLpipe"]
   spec.email = ["contact@urlpipe.dev"]
 
   spec.summary = "Ruby client for the URLpipe API: turn a URL into Markdown, HTML, a screenshot and more."

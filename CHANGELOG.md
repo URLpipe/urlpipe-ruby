@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- The gem's author is listed as URLpipe.
+
 ## 0.1.0
 
 The first release.
