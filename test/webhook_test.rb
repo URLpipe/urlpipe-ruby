@@ -7,7 +7,7 @@ class WebhookTest < Minitest::Test
   SECRET = "whsec_test_secret"
   OLD_SECRET = "whsec_old_secret"
   BODY = '{"token":"0Zx3","operation":"markdown","labels":{"client":"acme"},"success":true,' \
-         '"result":"# Example","result_url":null,"error":null,"meta":{"cache":"miss"}}'
+         '"result":"# Example","result_url":null,"final_url":null,"error":null,"meta":{"cache":"miss"}}'
 
   def sign(body, timestamp, secret = SECRET)
     OpenSSL::HMAC.hexdigest("SHA256", secret, "#{timestamp}.#{body}")

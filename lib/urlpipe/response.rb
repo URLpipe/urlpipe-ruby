@@ -16,11 +16,12 @@ module Urlpipe
   # - +quota+: a Quota
   # - +concurrency_limit+: Integer or "unlimited"
   # - +result_url+: screenshots only, a link to the image that needs no key
+  # - +final_url+: where the page ended up, after its redirects
   # - +idempotent_replayed+: +true+ when this answers an earlier request with
   #   the same Idempotency-Key, +false+ otherwise
   Meta = Struct.new(
     :cache, :cache_age, :processing_time_ms, :quota, :concurrency_limit,
-    :result_url, :idempotent_replayed,
+    :result_url, :final_url, :idempotent_replayed,
     keyword_init: true
   ) do
     # +headers+ is a Hash of lowercase header names to values.
@@ -38,6 +39,7 @@ module Urlpipe
         ),
         concurrency_limit: integer_or_given(headers["x-concurrency-limit"]),
         result_url: headers["x-result-url"],
+        final_url: headers["x-final-url"],
         idempotent_replayed: headers["idempotent-replayed"].to_s.strip.casecmp?("true")
       )
     end

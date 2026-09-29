@@ -22,7 +22,8 @@ module Urlpipe
 
     # Checks the delivery's signature and freshness and returns the parsed
     # payload, a Hash with "token", "operation", "labels", "success",
-    # "result", "result_url", "error" and "meta".
+    # "result", "result_url", "final_url" (where the page ended up, after its
+    # redirects), "error" and "meta".
     #
     # - +raw_body+: the request body as received (a String, or an IO)
     # - +headers+: the request headers. Accepts a plain Hash, Rails'

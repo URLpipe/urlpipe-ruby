@@ -99,7 +99,8 @@ module Urlpipe
     end
 
     # Page metadata. +data+ is a Hash with the same keys for every page:
-    # canonical_url, title, description, site_name, type, language, locale,
+    # final_url (where the page ended up, after its redirects), canonical_url,
+    # title, description, site_name, type, language, locale,
     # authors, published_at, modified_at, image, video, favicon_url, icons,
     # logo_url, feeds, keywords, theme_color, generator, manifest_url, robots,
     # open_graph, twitter, alternates, oembed_url, structured_data_types.
@@ -134,7 +135,7 @@ module Urlpipe
 
     # Several operations off one page visit. +operations+ is an Array such as
     # ["markdown", "meta"]. +data+ is a Hash:
-    # {"url" => ..., "operations" => {"markdown" => {"success", "result", "error", "cached"}}}.
+    # {"url" => ..., "final_url" => ..., "operations" => {"markdown" => {"success", "result", "error", "cached"}}}.
     # A screenshot inside a scrape stays Base64, as the API returns it.
     def scrape(url, operations, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
                page_options: nil, device: nil, include_audits: nil, screenshot_options: nil,

@@ -38,7 +38,14 @@ class OperationsTest < UrlpipeTest
     assert_equal "2026-08-31T23:59:59Z", meta.quota.resets_at
     assert_equal 3, meta.concurrency_limit
     assert_nil meta.result_url
+    assert_nil meta.final_url
     assert_equal false, meta.idempotent_replayed
+  end
+
+  def test_final_url_names_where_the_page_ended_up
+    @server.respond(200, "ok", "X-Final-Url" => "https://www.example.com/en/")
+
+    assert_equal "https://www.example.com/en/", client.markdown(URL).meta.final_url
   end
 
   def test_unlimited_plan_headers_stay_strings

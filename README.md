@@ -84,7 +84,7 @@ shot.result_url # => "https://..." - put it straight in an <img> tag
 
 ### meta
 
-`data` is a Hash with the same keys for every page: `title`, `description`, `site_name`, `type`, `language`, `locale`, `authors`, `published_at`, `modified_at`, `image`, `video`, `favicon_url`, `icons`, `logo_url`, `feeds`, `keywords`, `canonical_url`, `robots`, `alternates`, `oembed_url`, `structured_data_types`, and the raw `open_graph` and `twitter` tags. A value the page doesn't declare is `nil` or an empty Array. URLs are absolute, dates ISO 8601.
+`data` is a Hash with the same keys for every page: `final_url` (where the page ended up, after its redirects; relative URLs are resolved against it), `title`, `description`, `site_name`, `type`, `language`, `locale`, `authors`, `published_at`, `modified_at`, `image`, `video`, `favicon_url`, `icons`, `logo_url`, `feeds`, `keywords`, `canonical_url`, `robots`, `alternates`, `oembed_url`, `structured_data_types`, and the raw `open_graph` and `twitter` tags. A value the page doesn't declare is `nil` or an empty Array. URLs are absolute, dates ISO 8601.
 
 ```ruby
 page = client.meta("https://example.com").data
@@ -138,7 +138,7 @@ Every method returns a `Urlpipe::Response`:
 | `data` | The result when completed, `nil` otherwise. |
 | `token` | The request's result token. Fetching the result again with it is free for 30 days. |
 | `labels` | The labels the request was made with; `{}` when it had none. |
-| `meta` | `cache` (`"hit"`, `"miss"`, `"partial"`), `cache_age`, `processing_time_ms`, `quota` (`cost`, `limit`, `remaining`, `overage`, `resets_at`), `concurrency_limit`, `result_url`, `idempotent_replayed`. |
+| `meta` | `cache` (`"hit"`, `"miss"`, `"partial"`), `cache_age`, `processing_time_ms`, `quota` (`cost`, `limit`, `remaining`, `overage`, `resets_at`), `concurrency_limit`, `result_url`, `final_url` (where the page ended up, after its redirects), `idempotent_replayed`. |
 
 A value the API didn't send is `nil`; `idempotent_replayed` is always `true` or `false`. On an unlimited plan `quota.limit`, `quota.remaining` and `concurrency_limit` are the String `"unlimited"`.
 
@@ -179,7 +179,7 @@ class UrlpipeWebhooksController < ActionController::API
 end
 ```
 
-`verify(raw_body, headers, secret, tolerance: 300)` returns the payload Hash (`token`, `operation`, `labels`, `success`, `result`, `result_url`, `error`, `meta`), or raises `Urlpipe::WebhookVerificationError` saying why. It accepts any signature in the header that matches, so deliveries keep verifying through a secret rotation, and it refuses a timestamp more than `tolerance` seconds from now.
+`verify(raw_body, headers, secret, tolerance: 300)` returns the payload Hash (`token`, `operation`, `labels`, `success`, `result`, `result_url`, `final_url`, `error`, `meta`), or raises `Urlpipe::WebhookVerificationError` saying why. It accepts any signature in the header that matches, so deliveries keep verifying through a secret rotation, and it refuses a timestamp more than `tolerance` seconds from now.
 
 Pass the **raw** request body, exactly the bytes received: `request.raw_post` in Rails, `request.body.read` in Rack. Parsed and re-serialized JSON has different bytes and will not verify. `headers` can be Rails' `request.headers`, a Rack env or a plain Hash.
 
