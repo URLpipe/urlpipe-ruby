@@ -84,10 +84,13 @@ shot.result_url # => "https://..." - put it straight in an <img> tag
 
 ### meta
 
-`data` is a Hash with `title`, `description`, `language`, `main_image_url`, `favicon_url`, `author_name`, `feed_url`, `publication_date` and `additional_author_information`. Any of them can be `nil`.
+`data` is a Hash with the same keys for every page: `title`, `description`, `site_name`, `type`, `language`, `locale`, `authors`, `published_at`, `modified_at`, `image`, `video`, `favicon_url`, `icons`, `logo_url`, `feeds`, `keywords`, `canonical_url`, `robots`, `alternates`, `oembed_url`, `structured_data_types`, and the raw `open_graph` and `twitter` tags. A value the page doesn't declare is `nil` or an empty Array. URLs are absolute, dates ISO 8601.
 
 ```ruby
-client.meta("https://example.com").data["title"] # => "Example Domain"
+page = client.meta("https://example.com").data
+page["title"]                   # => "Example Domain"
+page.dig("image", "url")        # => "https://example.com/cover.jpg", or nil
+page["authors"].map { _1["name"] }
 ```
 
 ### keywords

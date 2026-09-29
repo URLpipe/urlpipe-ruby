@@ -98,9 +98,11 @@ module Urlpipe
               idempotency_key, extra)
     end
 
-    # Page metadata. +data+ is a Hash: title, description, language,
-    # main_image_url, favicon_url, author_name, feed_url, publication_date,
-    # additional_author_information.
+    # Page metadata. +data+ is a Hash with the same keys for every page:
+    # canonical_url, title, description, site_name, type, language, locale,
+    # authors, published_at, modified_at, image, video, favicon_url, icons,
+    # logo_url, feeds, keywords, theme_color, generator, manifest_url, robots,
+    # open_graph, twitter, alternates, oembed_url, structured_data_types.
     def meta(url, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
              page_options: nil, idempotency_key: nil, extra: {})
       analyse("meta", url, { sync:, max_age:, labels:, residential:, report_to:, page_options: },

@@ -114,7 +114,9 @@ class OperationsTest < UrlpipeTest
 
   def test_meta_returns_a_hash
     metadata = { "title" => "Example Domain", "description" => nil, "language" => "en",
-                 "additional_author_information" => { "twitter" => "@janedoe" } }
+                 "authors" => [ { "name" => "Jane Doe", "url" => nil, "profiles" => [ "https://x.com/janedoe" ] } ],
+                 "image" => { "url" => "https://example.com/cover.jpg", "width" => 1200, "height" => 630,
+                              "alt" => nil, "type" => nil } }
     @server.respond(200, metadata, QUOTA_HEADERS)
 
     response = client.meta(URL)
