@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `technologies` detects what a page is built with (`POST /technologies`): its CMS, frameworks, analytics, CDN and web server, each with its version, a confidence and the signals it was detected by.
 - `Meta#final_url` is the address the page ended on, after its redirects (the `X-Final-Url` header). A `/meta` result, a `/scrape` result and a webhook payload carry it as `"final_url"` too.
 - `meta` returns the fixed shape of `/meta`: every key always present — `canonical_url`, `title`, `description`, `site_name`, `type`, `language`, `locale`, `authors`, `published_at`, `modified_at`, `image`, `video`, `favicon_url`, `icons`, `logo_url`, `feeds`, `keywords`, `theme_color`, `generator`, `manifest_url`, `robots`, `open_graph`, `twitter`, `alternates`, `oembed_url`, `structured_data_types`. `main_image_url`, `author_name`, `publication_date`, `feed_url` and `additional_author_information` are gone: read `image["url"]`, `authors`, `published_at` and `feeds`.
 

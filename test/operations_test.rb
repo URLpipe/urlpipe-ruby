@@ -151,6 +151,23 @@ class OperationsTest < UrlpipeTest
     assert_equal entries, response.data
   end
 
+  def test_technologies_returns_what_the_page_is_built_with
+    result = {
+      "final_url" => "#{URL}/",
+      "technologies" => [
+        { "name" => "WordPress", "slug" => "wordpress", "version" => "6.4.2", "confidence" => 100,
+          "categories" => [{ "slug" => "cms", "name" => "CMS" }], "website" => "https://wordpress.org",
+          "description" => nil, "cpe" => nil, "detected_by" => ["meta"], "implied_by" => [] }
+      ]
+    }
+    @server.respond(200, result, QUOTA_HEADERS)
+
+    response = client.technologies(URL)
+
+    assert_standard_request(@server.last_request, "/technologies")
+    assert_equal result, response.data
+  end
+
   def test_lighthouse_sends_device_and_include_audits
     report = { "url" => URL, "categories" => { "performance" => { "score" => 0.98 } } }
     @server.respond(200, report, QUOTA_HEADERS)

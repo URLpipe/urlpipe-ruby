@@ -1,6 +1,6 @@
 # urlpipe
 
-Turn any URL into clean Markdown, rendered HTML, a full-page screenshot, metadata, a summary, keywords, console errors or a Lighthouse audit, from Ruby. Pages are rendered in real Chrome, so JavaScript-heavy sites come back complete.
+Turn any URL into clean Markdown, rendered HTML, a full-page screenshot, metadata, a summary, keywords, console errors, a Lighthouse audit or the technologies it is built with, from Ruby. Pages are rendered in real Chrome, so JavaScript-heavy sites come back complete.
 
 This is the official Ruby client for [URLpipe](https://urlpipe.dev). It has no runtime dependencies and runs on Ruby 3.1 and later.
 
@@ -107,6 +107,15 @@ client.keywords("https://example.com").data # => ["example domain", "documentati
 
 ```ruby
 client.console("https://example.com").data.select { |entry| entry["type"] == "exception" }
+```
+
+### technologies
+
+`data` is a Hash: `"final_url"` and `"technologies"`, an Array of what the page is built with, most certain first.
+
+```ruby
+client.technologies("https://example.com").data["technologies"].map { |tech| [tech["name"], tech["version"]] }
+# => [["WordPress", "6.4.2"], ["PHP", nil], ...]
 ```
 
 ### lighthouse

@@ -18,7 +18,7 @@ module Urlpipe
     USER_AGENT = "urlpipe-ruby/#{VERSION}".freeze
 
     TEXT_OPERATIONS = %w[markdown html summarize].freeze
-    JSON_OPERATIONS = %w[meta keywords console lighthouse scrape].freeze
+    JSON_OPERATIONS = %w[meta keywords console technologies lighthouse scrape].freeze
 
     RETRYABLE_STATUSES = [500, 502, 503].freeze
     MAX_RETRY_DELAY = 60
@@ -122,6 +122,15 @@ module Urlpipe
     def console(url, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
                 page_options: nil, idempotency_key: nil, extra: {})
       analyse("console", url, { sync:, max_age:, labels:, residential:, report_to:, page_options: },
+              idempotency_key, extra)
+    end
+
+    # What the page is built with. +data+ is a Hash with "final_url" and
+    # "technologies", an Array of Hashes with "name", "version", "confidence",
+    # "categories", "detected_by" and the rest, most certain first.
+    def technologies(url, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
+                     page_options: nil, idempotency_key: nil, extra: {})
+      analyse("technologies", url, { sync:, max_age:, labels:, residential:, report_to:, page_options: },
               idempotency_key, extra)
     end
 
