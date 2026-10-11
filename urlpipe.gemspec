@@ -10,7 +10,8 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Ruby client for the URLpipe API: turn a URL into Markdown, HTML, a screenshot and more."
   spec.description = "Official Ruby client for URLpipe. Get a page's Markdown, rendered HTML, a full-page " \
-                     "screenshot, metadata, a summary, keywords, console errors or a Lighthouse audit, " \
+                     "screenshot, a PDF, metadata, a summary, keywords, structured data, console errors or a " \
+                     "Lighthouse audit, " \
                      "rendered in real Chrome. Handles long analyses, retries with idempotency keys, and " \
                      "webhook signature verification. No runtime dependencies."
   spec.homepage = "https://urlpipe.dev"

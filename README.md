@@ -1,6 +1,6 @@
 # urlpipe
 
-Turn any URL into clean Markdown, rendered HTML, a full-page screenshot, metadata, a summary, keywords, console errors, a Lighthouse audit or the technologies it is built with, from Ruby. Pages are rendered in real Chrome, so JavaScript-heavy sites come back complete.
+Turn any URL into clean Markdown, rendered HTML, a full-page screenshot, a PDF, metadata, a summary, keywords, data in a schema you define, console errors, a Lighthouse audit or the technologies it is built with, from Ruby. Pages are rendered in real Chrome, so JavaScript-heavy sites come back complete.
 
 This is the official Ruby client for [URLpipe](https://urlpipe.dev). It has no runtime dependencies and runs on Ruby 3.1 and later.
 
@@ -37,7 +37,8 @@ Urlpipe::Client.new(
   timeout: 90,           # seconds per HTTP request; the API holds a sync request up to 60 s
   max_retries: 2,        # see "Retries and idempotency"
   wait_timeout: 300,     # how long a long analysis is polled before Urlpipe::WaitTimeoutError
-  poll_interval: 2       # seconds between polls of GET /result/:token
+  poll_interval: 2,      # seconds between polls of GET /result/:token
+  user_agent: nil        # your program's product token, e.g. "my-app/1.2"; it goes in front of the client's own
 )
 ```
 
@@ -54,7 +55,7 @@ Every method takes the URL first. These options work on all of them and are sent
 | `labels:` | Your own ids for the request, e.g. `{ client: "acme" }`. Returned with the result and the webhook. |
 | `residential:` | `true` fetches the page from a home broadband address. |
 | `report_to:` | A webhook URL the result is POSTed to (async calls). |
-| `page_options:` | `wait_for_selector`, `delay`, `block_ads`, `block_cookie_banners`, `remove_selectors`. Not on `lighthouse`. |
+| `page_options:` | `wait_for_selector`, `delay`, `block_ads`, `block_cookie_banners`, `block_popups`, `remove_selectors`. Not on `lighthouse`. |
 | `idempotency_key:` | Sent as the `Idempotency-Key` header. |
 | `extra:` | A Hash merged into the request body, for API options this version doesn't name yet. |
 
@@ -82,6 +83,16 @@ shot.mime_type  # => "image/webp"
 shot.result_url # => "https://..." - put it straight in an <img> tag
 ```
 
+### pdf
+
+`data` is a `Urlpipe::Pdf`: the whole rendered page as decoded PDF bytes, and `result_url`, a link to the PDF that needs no API key. `pdf_options:` choose `paper_size`, `landscape`, `margin`, `scale`, `print_background`, `media` and `single_page`.
+
+```ruby
+pdf = client.pdf("https://example.com/invoice", pdf_options: { paper_size: "letter", landscape: true }).data
+pdf.save("invoice.pdf")
+pdf.result_url # => "https://..."
+```
+
 ### meta
 
 `data` is a Hash with the same keys for every page: `final_url` (where the page ended up, after its redirects; relative URLs are resolved against it), `title`, `description`, `site_name`, `type`, `language`, `locale`, `authors`, `published_at`, `modified_at`, `image`, `video`, `favicon_url`, `icons`, `logo_url`, `feeds`, `keywords`, `canonical_url`, `robots`, `alternates`, `oembed_url`, `structured_data_types`, and the raw `open_graph` and `twitter` tags. A value the page doesn't declare is `nil` or an empty Array. URLs are absolute, dates ISO 8601.
@@ -99,6 +110,24 @@ page["authors"].map { _1["name"] }
 
 ```ruby
 client.keywords("https://example.com").data # => ["example domain", "documentation", ...]
+```
+
+### extract
+
+Data in a schema you define. Describe the fields you want and `data` is a Hash with exactly those keys, in that order, `nil` where the page gives no value. A field's `type` is `string`, `number`, `integer`, `boolean`, `date`, `datetime`, `url`, `email`, `object` (with its own `fields`) or `array` (with `items`).
+
+```ruby
+product = client.extract(
+  "https://example.com/products/trail-shoe",
+  [
+    { name: "name", type: "string" },
+    { name: "price", type: "number", description: "The current price, without the currency" },
+    { name: "in_stock", type: "boolean" },
+    { name: "sizes", type: "array", items: "string" }
+  ],
+  instructions: "Ignore the related products."
+).data
+product["price"] # => 89.5
 ```
 
 ### console
@@ -129,7 +158,7 @@ report.dig("categories", "performance", "score")
 
 ### scrape
 
-Several operations off one page visit, so you get them all much sooner. `data` is `{"url" => ..., "operations" => {"markdown" => {"success", "result", "error", "cached"}, ...}}`. Each operation succeeds or fails on its own. A screenshot inside a scrape stays Base64, as the API returns it.
+Several operations off one page visit, so you get them all much sooner. `data` is `{"url" => ..., "operations" => {"markdown" => {"success", "result", "error", "cached"}, ...}}`. Each operation succeeds or fails on its own. A screenshot or a PDF inside a scrape stays Base64, as the API returns it. `scrape` also takes `screenshot_options:`, `pdf_options:`, and `fields:` and `instructions:` for its `extract` operation.
 
 ```ruby
 page = client.scrape("https://example.com", %w[markdown meta screenshot],
@@ -168,7 +197,7 @@ report = client.wait(accepted.token, operation: "lighthouse").data
 
 `wait(token, operation: nil, timeout: wait_timeout, interval: poll_interval)` polls until the result is ready. `result(token, operation: nil)` checks once and returns a `"processing"` Response while it is still running.
 
-The API doesn't say which operation produced a token, so pass `operation:` to get `data` typed the way that method returns it. Without it JSON comes back parsed and text stays a String, which means a screenshot stays Base64: `client.wait(token, operation: "screenshot")` decodes it into a `Urlpipe::Screenshot`.
+The API doesn't say which operation produced a token, so pass `operation:` to get `data` typed the way that method returns it. Without it JSON comes back parsed and text stays a String, which means a screenshot or a PDF stays Base64: `client.wait(token, operation: "screenshot")` decodes it into a `Urlpipe::Screenshot`, and `operation: "pdf"` into a `Urlpipe::Pdf`.
 
 ## Webhooks
 

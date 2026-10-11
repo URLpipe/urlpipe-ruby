@@ -18,7 +18,7 @@ module Urlpipe
     USER_AGENT = "urlpipe-ruby/#{VERSION}".freeze
 
     TEXT_OPERATIONS = %w[markdown html summarize].freeze
-    JSON_OPERATIONS = %w[meta keywords console technologies lighthouse scrape].freeze
+    JSON_OPERATIONS = %w[meta keywords extract console technologies lighthouse scrape].freeze
 
     RETRYABLE_STATUSES = [500, 502, 503].freeze
     MAX_RETRY_DELAY = 60
@@ -45,8 +45,10 @@ module Urlpipe
     # - +wait_timeout+: how long a sync call or +wait+ keeps polling a long
     #   analysis before raising WaitTimeoutError
     # - +poll_interval+: seconds between polls of GET /result/:token
+    # - +user_agent+: your program's product token, such as "my-app/1.2". It
+    #   goes in front of the client's own, so requests identify both
     def initialize(api_key: nil, base_url: DEFAULT_BASE_URL, timeout: 90, max_retries: 2,
-                   wait_timeout: 300, poll_interval: 2)
+                   wait_timeout: 300, poll_interval: 2, user_agent: nil)
       api_key = ENV.fetch("URLPIPE_API_KEY", nil) if api_key.nil? || api_key.to_s.strip.empty?
       if api_key.nil? || api_key.strip.empty?
         raise ConfigurationError,
@@ -61,6 +63,7 @@ module Urlpipe
       @max_retries = Integer(max_retries)
       @wait_timeout = wait_timeout
       @poll_interval = poll_interval
+      @user_agent = [user_agent.to_s.strip, USER_AGENT].reject(&:empty?).join(" ")
     end
 
     def inspect
@@ -98,6 +101,16 @@ module Urlpipe
               idempotency_key, extra)
     end
 
+    # The whole rendered page as a PDF. +data+ is a Pdf (decoded bytes,
+    # +mime_type+, +result_url+). +pdf_options+ choose the paper, orientation,
+    # margins, scale and stylesheet.
+    def pdf(url, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
+            page_options: nil, pdf_options: nil, idempotency_key: nil, extra: {})
+      analyse("pdf", url,
+              { sync:, max_age:, labels:, residential:, report_to:, page_options:, pdf_options: },
+              idempotency_key, extra)
+    end
+
     # Page metadata. +data+ is a Hash with the same keys for every page:
     # final_url (where the page ended up, after its redirects), canonical_url,
     # title, description, site_name, type, language, locale,
@@ -114,6 +127,18 @@ module Urlpipe
     def keywords(url, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
                  page_options: nil, idempotency_key: nil, extra: {})
       analyse("keywords", url, { sync:, max_age:, labels:, residential:, report_to:, page_options: },
+              idempotency_key, extra)
+    end
+
+    # Data from the page in the schema +fields+ describes: an Array of Hashes
+    # with :name, :type and optionally :description, :fields (an object's) and
+    # :items (an array's). +data+ is a Hash with exactly those names as keys,
+    # in order, nil where the page gives no value. +instructions+ adds
+    # guidance in plain words.
+    def extract(url, fields, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
+                page_options: nil, instructions: nil, idempotency_key: nil, extra: {})
+      analyse("extract", url,
+              { fields:, instructions:, sync:, max_age:, labels:, residential:, report_to:, page_options: },
               idempotency_key, extra)
     end
 
@@ -145,13 +170,14 @@ module Urlpipe
     # Several operations off one page visit. +operations+ is an Array such as
     # ["markdown", "meta"]. +data+ is a Hash:
     # {"url" => ..., "final_url" => ..., "operations" => {"markdown" => {"success", "result", "error", "cached"}}}.
-    # A screenshot inside a scrape stays Base64, as the API returns it.
+    # A screenshot or a PDF inside a scrape stays Base64, as the API returns
+    # it. +fields+ and +instructions+ are for its "extract" operation.
     def scrape(url, operations, sync: true, max_age: nil, labels: nil, residential: nil, report_to: nil,
                page_options: nil, device: nil, include_audits: nil, screenshot_options: nil,
-               idempotency_key: nil, extra: {})
+               pdf_options: nil, fields: nil, instructions: nil, idempotency_key: nil, extra: {})
       analyse("scrape", url,
               { operations:, sync:, max_age:, labels:, residential:, report_to:, page_options:,
-                device:, include_audits:, screenshot_options: },
+                device:, include_audits:, screenshot_options:, pdf_options:, fields:, instructions: },
               idempotency_key, extra)
     end
 
@@ -160,8 +186,9 @@ module Urlpipe
     #
     # +operation+ names the operation that produced the token, so +data+ is
     # typed as that operation returns it. Without it, JSON stays parsed JSON
-    # and text stays a String (a screenshot stays Base64: pass
-    # <tt>operation: "screenshot"</tt> to get a Screenshot).
+    # and text stays a String (a screenshot or a PDF stays Base64: pass
+    # <tt>operation: "screenshot"</tt> or <tt>"pdf"</tt> to get a Screenshot
+    # or a Pdf).
     def result(token, operation: nil)
       raw = execute(:get, "/result/#{URI.encode_www_form_component(token)}")
 
@@ -246,6 +273,8 @@ module Urlpipe
         raw.text
       elsif operation == "screenshot"
         Screenshot.from_base64(raw.text, result_url: raw.headers["x-result-url"])
+      elsif operation == "pdf"
+        Pdf.from_base64(raw.text, result_url: raw.headers["x-result-url"])
       elsif JSON_OPERATIONS.include?(operation) || (operation.nil? && raw.json?)
         parse_result_json(raw)
       else
@@ -328,7 +357,7 @@ module Urlpipe
 
       request = method == :post ? Net::HTTP::Post.new(uri) : Net::HTTP::Get.new(uri)
       request["Authorization"] = "Bearer #{@api_key}"
-      request["User-Agent"] = USER_AGENT
+      request["User-Agent"] = @user_agent
       request["Accept"] = "*/*"
       request["Idempotency-Key"] = idempotency_key if idempotency_key
       if body

@@ -168,6 +168,35 @@ class OperationsTest < UrlpipeTest
     assert_equal result, response.data
   end
 
+  def test_extract_sends_the_fields_and_returns_the_object
+    fields = [
+      { name: "name", type: "string", description: "The product's name" },
+      { name: "price", type: "number" },
+      { name: "sizes", type: "array", items: "string" }
+    ]
+    result = { "name" => "Trail Shoe", "price" => 89.5, "sizes" => nil }
+    @server.respond(200, result, QUOTA_HEADERS)
+
+    response = client.extract(URL, fields, instructions: "Prices in euros.")
+
+    request = @server.last_request
+    assert_standard_request(request, "/extract")
+    assert_equal JSON.parse(JSON.generate(fields)), request.json["fields"]
+    assert_equal "Prices in euros.", request.json["instructions"]
+    assert_equal result, response.data
+    assert_equal %w[name price sizes], response.data.keys
+  end
+
+  def test_user_agent_goes_in_front_of_the_clients_own
+    @server.respond(200, "ok").respond(200, "ok")
+
+    client(user_agent: "my-app/1.2").markdown(URL)
+    assert_equal "my-app/1.2 urlpipe-ruby/#{Urlpipe::VERSION}", @server.last_request["User-Agent"]
+
+    client(user_agent: " ").markdown(URL)
+    assert_equal "urlpipe-ruby/#{Urlpipe::VERSION}", @server.last_request["User-Agent"]
+  end
+
   def test_lighthouse_sends_device_and_include_audits
     report = { "url" => URL, "categories" => { "performance" => { "score" => 0.98 } } }
     @server.respond(200, report, QUOTA_HEADERS)
@@ -190,12 +219,18 @@ class OperationsTest < UrlpipeTest
     @server.respond(200, result, QUOTA_HEADERS.merge("X-Cache" => "partial"))
 
     response = client.scrape(URL, %w[markdown meta screenshot], device: "mobile",
-                                                                screenshot_options: { format: "webp" })
+                                                                screenshot_options: { format: "webp" },
+                                                                pdf_options: { landscape: true },
+                                                                fields: [{ name: "price", type: "number" }],
+                                                                instructions: "Prices in euros.")
 
     request = @server.last_request
     assert_standard_request(request, "/scrape")
     assert_equal %w[markdown meta screenshot], request.json["operations"]
     assert_equal({ "format" => "webp" }, request.json["screenshot_options"])
+    assert_equal({ "landscape" => true }, request.json["pdf_options"])
+    assert_equal [{ "name" => "price", "type" => "number" }], request.json["fields"]
+    assert_equal "Prices in euros.", request.json["instructions"]
     assert_equal "mobile", request.json["device"]
     assert_equal result, response.data
     assert_equal "partial", response.meta.cache

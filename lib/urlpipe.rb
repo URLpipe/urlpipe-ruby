@@ -4,12 +4,14 @@ require_relative "urlpipe/version"
 require_relative "urlpipe/errors"
 require_relative "urlpipe/response"
 require_relative "urlpipe/screenshot"
+require_relative "urlpipe/pdf"
 require_relative "urlpipe/client"
 require_relative "urlpipe/webhook"
 
 # Ruby client for the URLpipe API (https://urlpipe.dev): turn a URL into
-# Markdown, rendered HTML, a screenshot, metadata, a summary, keywords,
-# console errors or a Lighthouse audit.
+# Markdown, rendered HTML, a screenshot, a PDF, metadata, a summary, keywords,
+# data in a schema you define, console errors, a Lighthouse audit or the
+# technologies a site is built with.
 #
 #   client = Urlpipe::Client.new # reads URLPIPE_API_KEY
 #   client.markdown("https://example.com").data
