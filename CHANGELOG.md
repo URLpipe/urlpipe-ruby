@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - `pdf` returns the whole rendered page as a PDF (`POST /pdf`): a `Urlpipe::Pdf` with the decoded bytes, `mime_type`, `result_url` and `save`. `pdf_options:` choose the paper, orientation, margins, scale, backgrounds, the print or screen stylesheet and `single_page`.
 - `extract` returns data from a page in a schema you define (`POST /extract`): pass `fields` and get a Hash with exactly those keys, in order, `nil` where the page gives no value. `instructions:` adds guidance in plain words.
