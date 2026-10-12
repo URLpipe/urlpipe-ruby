@@ -55,7 +55,7 @@ Every method takes the URL first. These options work on all of them and are sent
 | `labels:` | Your own ids for the request, e.g. `{ client: "acme" }`. Returned with the result and the webhook. |
 | `residential:` | `true` fetches the page from a home broadband address. |
 | `report_to:` | A webhook URL the result is POSTed to (async calls). |
-| `page_options:` | `wait_for_selector`, `delay`, `block_ads`, `block_cookie_banners`, `block_popups`, `remove_selectors`. Not on `lighthouse`. |
+| `page_options:` | `wait_for_selector`, `scroll_to_bottom`, `delay`, `block_ads`, `block_cookie_banners`, `block_popups`, `remove_selectors`. Not on `lighthouse`. |
 | `idempotency_key:` | Sent as the `Idempotency-Key` header. |
 | `extra:` | A Hash merged into the request body, for API options this version doesn't name yet. |
 
